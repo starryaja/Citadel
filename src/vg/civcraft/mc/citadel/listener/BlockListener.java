@@ -57,6 +57,7 @@ import vg.civcraft.mc.citadel.events.ReinforcementDamageEvent;
 import vg.civcraft.mc.citadel.misc.ReinforcemnetFortificationCancelException;
 import vg.civcraft.mc.citadel.reinforcement.PlayerReinforcement;
 import vg.civcraft.mc.citadel.reinforcement.Reinforcement;
+import vg.civcraft.mc.citadel.reinforcementtypes.ExclusiveReinforcementType;
 import vg.civcraft.mc.citadel.reinforcementtypes.ReinforcementType;
 import vg.civcraft.mc.namelayer.group.Group;
 
@@ -114,6 +115,12 @@ public class BlockListener implements Listener{
 		 // Don't allow double reinforcing reinforceable plants
         if (wouldPlantDoubleReinforce(b)) {
         	sendAndLog(p, ChatColor.RED, "Cancelled block place, crop would already be reinforced.");
+            event.setCancelled(true);
+            return;
+        }
+        // Don't allow incorrect reinforcement with exclusive reinforcement types
+        if (!ExclusiveReinforcementType.canReinforce(type.getMaterial(), b.getType())) {
+            sendAndLog(p, ChatColor.RED, "That material cannot reinforce that type of block. Try a different reinforcement material.");
             event.setCancelled(true);
             return;
         }
@@ -507,6 +514,13 @@ public class BlockListener implements Listener{
 	                		state.reset();
 	                		return;
 	                	}
+                		// Don't allow incorrect reinforcement with exclusive reinforcement types
+                		if (!ExclusiveReinforcementType.canReinforce(type.getMaterial(), block.getType())) {
+                			sendAndLog(player, ChatColor.RED, "That material cannot reinforce that type of block. Try a different reinforcement material.");
+                			sendAndLog(player, ChatColor.RED,"Left Reinforcement mode.");
+                			state.reset();
+                			return;
+						}
 	                	state.setFortificationItemStack(type.getItemStack());
 	                    // Break any natural reinforcement before placing the player reinforcement
 	                    if (generic_reinforcement != null) {
