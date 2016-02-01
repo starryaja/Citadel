@@ -354,7 +354,7 @@ public class CitadelReinforcementData {
 				set.close();
 				NaturalReinforcement rein = new NaturalReinforcement(loc.getBlock(), durability);
 				return rein;
-			} else if ("MultiBlockReinforcement".equals(rein_type)) {
+			} else if (rein_type.equals("MultiBlockReinforcement")){
 				int id = set.getInt(9);
 				set.close();
 				MultiBlockReinforcement rein = MultiBlockReinforcement.getMultiRein(id);
