@@ -44,7 +44,7 @@ public class CommandHandler {
 		addCommands(new ToggleEasyMode("ToggleEasyMode"));
 		addCommands(new ReinforcementsGUI("ReinforcementGUI"));
 	}
-	
+
 	private void addCommands(Command command){
 			commands.put(command.getIdentifier().toLowerCase(), command);
 	}
@@ -63,7 +63,7 @@ public class CommandHandler {
 				helpPlayer(command, sender);
 				return true;
 			}
-			
+
 			command.execute(sender, args);
 		}
 		return true;

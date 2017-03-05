@@ -1,5 +1,6 @@
 package vg.civcraft.mc.citadel.listener;
 
+import static org.bukkit.util.NumberConversions.round;
 import static vg.civcraft.mc.citadel.Utility.canPlace;
 import static vg.civcraft.mc.citadel.Utility.createNaturalReinforcement;
 import static vg.civcraft.mc.citadel.Utility.createPlayerReinforcement;
@@ -13,8 +14,7 @@ import static vg.civcraft.mc.citadel.Utility.timeUntilMature;
 import static vg.civcraft.mc.citadel.Utility.timeUntilAcidMature;
 import static vg.civcraft.mc.citadel.Utility.wouldPlantDoubleReinforce;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -24,6 +24,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
@@ -41,6 +42,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
@@ -95,7 +97,7 @@ public class BlockListener implements Listener {
 						}
 					}
 				}
-				
+
 				rm.deleteReinforcement(rein);
 			}
 			ItemStack stack = event.getItemInHand();
@@ -117,7 +119,7 @@ public class BlockListener implements Listener {
 				return;
 			}
 			groupToReinforceTo = state.getGroup();
-		}else if(state.getMode() == ReinforcementMode.NORMAL) {	
+		}else if(state.getMode() == ReinforcementMode.NORMAL) {
 			if (!state.getEasyMode()) {
 				return;
 			}
@@ -136,7 +138,7 @@ public class BlockListener implements Listener {
 			else {
 				return;
 		}
-	
+
 		if (!canPlace(b, p)){
 			sendAndLog(p, ChatColor.RED, "Cancelled block place, mismatched reinforcement.");
 			event.setCancelled(true);
@@ -164,13 +166,13 @@ public class BlockListener implements Listener {
 					sendAndLog(p, ChatColor.RED, String.format("%s is not a reinforcible material ", b.getType().name()));
 				} else {
 					state.checkResetMode();
-				}	
+				}
 			} catch(ReinforcemnetFortificationCancelException ex){
 				Citadel.getInstance().getLogger().log(Level.WARNING, "ReinforcementFortificationCancelException occured in BlockListener, BlockPlaceEvent ", ex);
 			}
         } else {
         	if (state.getMode() == ReinforcementMode.REINFORCEMENT_FORTIFICATION) {
-	        	sendAndLog(p, ChatColor.YELLOW, String.format("%s depleted, left fortification mode ",  
+	        	sendAndLog(p, ChatColor.YELLOW, String.format("%s depleted, left fortification mode ",
 	            		state.getReinforcementType().getMaterial().name()));
 	            state.reset();
 	            event.setCancelled(true);
@@ -273,10 +275,73 @@ public class BlockListener implements Listener {
 			}
 		}
 
+		 if (CitadelConfigManager.isDurabilityModeEnabled()) {
+			//If trueDurability is on, subtract one from the tool's durability on reinforcementDamaged.
+			ItemStack mainHand = player.getInventory().getItemInMainHand();
+			Short maxDurability = MaxDurability(mainHand);
+
+			if(maxDurability > 0) {
+				int enchLvl = mainHand.getEnchantmentLevel(Enchantment.DURABILITY);
+				int lessDura = 0;
+				boolean thing = true;
+
+				if(enchLvl > 0) {
+					thing = new Random().nextInt(enchLvl + 1) == 0;
+					player.sendMessage(ChatColor.RED + "" + thing);
+				} else {
+					thing = true;
+				}
+
+				if(thing) {
+					lessDura = 1;
+				}
+
+				mainHand.setDurability((short)(mainHand.getDurability() + lessDura));
+
+				if (mainHand.getDurability() >= maxDurability) {
+					player.getInventory().remove(mainHand);
+				}
+			}
+		}
+
 		if (is_cancelled) {
 			event.setCancelled(true);
 			block.getDrops().clear();
 		}
+	}
+
+
+	private short MaxDurability(ItemStack is) {
+
+		HashMap<Material, Short> durabilityTable = new HashMap<>();
+		durabilityTable.put(Material.GOLD_AXE, (short) 33);
+		durabilityTable.put(Material.GOLD_SPADE, (short) 33);
+		durabilityTable.put(Material.GOLD_PICKAXE, (short) 33);
+		durabilityTable.put(Material.GOLD_HOE, (short) 33);
+		durabilityTable.put(Material.WOOD_AXE, (short) 60);
+		durabilityTable.put(Material.WOOD_SPADE, (short) 60);
+		durabilityTable.put(Material.WOOD_PICKAXE, (short) 60);
+		durabilityTable.put(Material.WOOD_HOE, (short) 60);
+		durabilityTable.put(Material.STONE_AXE, (short) 132);
+		durabilityTable.put(Material.STONE_SPADE, (short) 132);
+		durabilityTable.put(Material.STONE_PICKAXE, (short) 132);
+		durabilityTable.put(Material.STONE_HOE, (short) 132);
+		durabilityTable.put(Material.IRON_AXE, (short) 251);
+		durabilityTable.put(Material.IRON_PICKAXE, (short) 251);
+		durabilityTable.put(Material.IRON_SPADE, (short) 251);
+		durabilityTable.put(Material.IRON_HOE, (short) 251);
+		durabilityTable.put(Material.DIAMOND_AXE, (short) 1536);
+		durabilityTable.put(Material.DIAMOND_PICKAXE, (short) 1536);
+		durabilityTable.put(Material.DIAMOND_SPADE, (short) 1536);
+		durabilityTable.put(Material.DIAMOND_HOE, (short) 1536);
+		durabilityTable.put(Material.SHEARS, (short) 337);
+
+
+		if(durabilityTable.containsKey(is.getType())) {
+			return durabilityTable.get(is.getType());
+		}
+
+		return 0;
 	}
 
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -488,8 +553,8 @@ public class BlockListener implements Listener {
 						if (!canPlace(block, player)){
 							sendAndLog(player, ChatColor.RED, "Cancelled interact easymode rein, mismatched reinforcement.");
 							return;
-						}						
-						
+						}
+
 						String gName = gm.getDefaultGroup(player.getUniqueId());
 						Group g = null;
 						if (gName != null) {
@@ -507,7 +572,7 @@ public class BlockListener implements Listener {
 												e);
 							}
 						}
-					}	
+					}
 				}
 				return;
 			case REINFORCEMENT_FORTIFICATION:
@@ -701,7 +766,7 @@ public class BlockListener implements Listener {
 										sendAndLog(player, ChatColor.GREEN, "Changed reinforcement type");
 									} catch (ReinforcemnetFortificationCancelException ex) {
 										Citadel.getInstance().getLogger().log(Level.WARNING,
-												"ReinforcementFortificationCancelException occured in BlockListener, PlayerInteractEvent ", ex);
+												"ReinforcementFortificationCancelException occurred in BlockListener, PlayerInteractEvent ", ex);
 									}
 								}
 							}

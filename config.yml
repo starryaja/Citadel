@@ -11,8 +11,8 @@
 #  offsetY: the amount to be randomly offset by in the Y axis
 #  offsetZ: the amount to be randomly offset by in the Z axis
 #  speed: the speed of the particles
-#  particleCount: the amount of particle to display. 
-#  view_distance: the distance from which players will be able to see the effect. default is 16. 
+#  particleCount: the amount of particle to display.
+#  view_distance: the distance from which players will be able to see the effect. default is 16.
 # internal_logging logs Citadel internal status messages, config notices, and the like. Strongly recommend it be on.
 internal_logging: true
 # command_logging logs the _response_ that Citadel sends to the player; very useful.
@@ -42,7 +42,7 @@ reinforcements:
    type: FLYING_GLYPH
    speed: 0.5
    particleCount: 50
-# Delete the comment char to use lore.  Three spaces are required 
+# Delete the comment char to use lore.  Three spaces are required
 # after lore. You can add multiple lines by adding -
 #   - Some string representation required for this reinforcement.
 #
@@ -95,6 +95,8 @@ non_reinforceables:
  - ENDER_PORTAL
 reset_player_state: 300
 enable_maturation: true
+# If enabled, breaking reinforcements reduces tool durability.
+true_durability_mode: false
 # The max amount of reinforcements to keep loaded
 max_cache_size: 20000000
 # The amount of minutes to keep a reinforcement loaded
